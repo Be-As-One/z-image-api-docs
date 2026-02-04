@@ -1,0 +1,106 @@
+---
+title: Authentication
+description: 'Create and secure your API key'
+---
+
+## How Authentication Works
+
+We use API key authentication. Every request must include your key in the Authorization header using Bearer token format:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Getting Your API Key
+
+<Steps>
+  <Step title="Login to Dashboard">
+    Navigate to 👉 [your dashboard](https://z-image.vip/admin) and sign in
+  </Step>
+
+  <Step title="Create API Key">
+    Go to "API Key Management" section and click "Create New Key"
+  </Step>
+
+  <Step title="Save Your Key">
+    Copy and save your API key immediately - it will only be shown once
+  </Step>
+</Steps>
+
+<Warning>
+  **Never expose your API key.** Don't commit it to GitHub, share it in Discord, or log it in production. We can't revoke leaked keys retroactively - you'll need to delete and create a new one.
+</Warning>
+
+## Managing Your Keys
+
+**Key states:**
+- **Active** - Key works for API requests
+- **Inactive** - You disabled it (can reactivate anytime)
+- **Expired** - Past expiration date (delete and create new one)
+
+**Best practices:**
+- One key per environment (dev, staging, prod)
+- Rotate keys every 90 days
+- Delete unused keys immediately
+- Use environment variables, not hardcoded strings
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://z-image.vip/api/v1/jobs/createTask" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedream-text-to-image",
+    "inputs": {
+      "prompt": "A beautiful sunset"
+    }
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://z-image.vip/api/v1/jobs/createTask', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'seedream-text-to-image',
+    inputs: {
+      prompt: 'A beautiful sunset'
+    }
+  })
+});
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://z-image.vip/api/v1/jobs/createTask',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'model': 'seedream-text-to-image',
+        'inputs': {
+            'prompt': 'A beautiful sunset'
+        }
+    }
+)
+```
+
+</CodeGroup>
+
+## Authentication Errors
+
+| Error Code | Error Message | Solution |
+|------------|---------------|----------|
+| 401 | Missing Authorization header | Include the Authorization header |
+| 401 | Invalid API Key | Check that your API key is correct |
+| 401 | API Key is inactive | Reactivate your key in the dashboard |
+| 401 | API Key has expired | Create a new API key |

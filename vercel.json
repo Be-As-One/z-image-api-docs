@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm install -g mintlify && mintlify build",
+  "devCommand": "mintlify dev",
+  "installCommand": "echo 'Skipping default install'",
+  "framework": null,
+  "outputDirectory": ".mintlify"
+}

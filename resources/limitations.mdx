@@ -1,0 +1,174 @@
+---
+title: Known Limitations
+description: "What we support and what we don't (yet)"
+---
+
+## We're Not Perfect
+
+We're transparent about what works and what doesn't. This page lists known limitations and workarounds.
+
+## Model Limitations
+
+### Seedream (Image Generation)
+
+**What works well:**
+- Natural landscapes and architecture
+- Objects and products
+- Abstract art and patterns
+- Photorealistic scenes
+
+**Known issues:**
+- Text in images often distorted or misspelled
+- Complex hands and fingers (common AI issue)
+- Very specific brand logos may not match reality
+- Multiple people in one scene can have inconsistent styles
+
+**Not supported:**
+- Explicit NSFW content (blocked by content filter)
+- Deepfakes or impersonation of real people
+- Copyrighted characters (Disney, Marvel, etc.)
+
+### Wan 2.2 (Video Generation)
+
+**What works well:**
+- Camera movements (zoom, pan, tilt)
+- Simple subject motion (walking, turning head)
+- Nature scenes (flowing water, blowing leaves)
+- Portrait animation
+
+**Known issues:**
+- Complex multi-step actions often fail
+- Fast motion can introduce artifacts
+- Physics not always realistic (gravity, momentum)
+- Long videos (12s) have more quality variance
+
+**Not supported:**
+- Multiple subjects with independent motion
+- Text appearing/disappearing in video
+- Extreme camera angles or distortion
+
+## API Limitations
+
+**Rate Limits:**
+- 100 requests per minute per API key
+- 1,000 requests per hour per API key
+- No bulk submission endpoint (submit one by one)
+
+**Task Limits:**
+- Maximum 5 concurrent tasks per account
+- Tasks timeout after 10 minutes of processing
+- No priority queue (first come, first served)
+
+**File Size:**
+- Image inputs for video: max 10MB
+- Output images: typically 2-8MB
+- Output videos: typically 5-30MB
+
+**Content Policies:**
+- NSFW detection is automated and may have false positives
+- Appeals process not available yet
+- Blocked content costs credits (working on refund logic)
+
+## Infrastructure
+
+**Uptime:**
+- No SLA guarantee yet
+- Typical availability: ~99% (based on last 90 days)
+- Maintenance windows announced 24 hours ahead
+
+**Geographic Limitations:**
+- Servers in US East (latency varies globally)
+- No edge locations or CDN acceleration
+- Some countries may have slow upload speeds
+
+**Scaling:**
+- During peak hours (9am-11am UTC), queue times increase
+- No auto-scaling yet (we manually add capacity)
+- Large traffic spikes may cause temporary slowdowns
+
+## Feature Requests We've Received
+
+**Not planned:**
+- Video-to-video transformation
+- Style transfer between images
+- Batch processing with CSV upload
+
+**Under consideration:**
+- More aspect ratios (2:1, 4:5)
+- Longer video durations (30s, 60s)
+- Custom LoRA model support
+- API key permission scopes
+
+**Planned for Q2 2025:**
+- WebSocket status updates (replace polling)
+- Credit usage analytics dashboard
+- Team accounts with role management
+
+## Workarounds
+
+### Slow Response Times
+
+**Problem:** API responses take >30 seconds
+
+**Workarounds:**
+- Use shorter video durations (5s instead of 12s)
+- Lower resolution for testing (2K instead of 4K)
+- Submit during off-peak hours (after 12pm UTC)
+
+### NSFW False Positives
+
+**Problem:** Safe content blocked as NSFW
+
+**Workarounds:**
+- Rephrase prompt to avoid trigger words
+- Try different aspect ratio
+- Contact 👉 [support](support) with task ID (we'll review manually)
+
+### Task Stuck in "Running"
+
+**Problem:** Task shows "running" for >5 minutes
+
+**Workarounds:**
+- Wait 10 minutes (some complex tasks take longer)
+- Check 👉 [status page](https://status.z-image.vip)
+- Submit new task with same parameters
+- Original task will auto-fail after 10 minutes (credits refunded)
+
+## Reporting New Issues
+
+Found something not listed here?
+
+1. Check 👉 [logs](logs) for error messages
+2. Search 👉 [GitHub issues](https://github.com/Be-As-One/z-image/issues)
+3. Open new issue or contact 👉 [support](support)
+
+Include:
+- Task ID
+- Model and parameters
+- Expected behavior
+- Actual behavior
+- Screenshots if relevant
+
+## Transparency Updates
+
+We update this page monthly based on:
+- User support tickets
+- GitHub issue trends
+- Internal bug tracking
+
+Last updated: 2025-02-04
+
+<Note>
+We're a 3-person team building this service. Some limitations exist because we haven't built the solution yet, not because it's technically impossible. Your feedback helps us prioritize.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Support" icon="headset" href="support">
+    Report issues or request features
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="../common/error-handling">
+    Handle known issues in code
+  </Card>
+</CardGroup>

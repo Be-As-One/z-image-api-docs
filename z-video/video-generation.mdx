@@ -1,0 +1,164 @@
+---
+title: Z Video Generation
+description: 'Image to video API'
+api: 'POST https://z-image.vip/api/v1/jobs/createTask'
+---
+
+## Endpoint
+
+```
+POST https://z-image.vip/api/v1/jobs/createTask
+```
+
+## Headers
+
+| Header | Value | Required |
+|--------|-------|----------|
+| Authorization | Bearer YOUR_API_KEY | Yes |
+| Content-Type | application/json | Yes |
+
+## Request Body
+
+<ParamField body="model" type="string" required>
+  Must be `wan22-video-generation`
+</ParamField>
+
+<ParamField body="inputs" type="object" required>
+  Generation parameters
+
+  <Expandable title="inputs properties">
+    <ParamField body="imageUrl" type="string" required>
+      Publicly accessible image URL to animate (max 10MB)
+    </ParamField>
+
+    <ParamField body="prompt" type="string">
+      Motion description (optional, recommended for better results)
+    </ParamField>
+
+    <ParamField body="duration" type="string" default="5s">
+      Video length. Options: `5s`, `8s`, `12s`
+      - `5s` - 15 credits
+      - `8s` - 20 credits
+      - `12s` - 28 credits
+    </ParamField>
+
+    <ParamField body="resolution" type="string" default="1280x720">
+      Output resolution. Options: `1280x720`, `1920x1080`
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="code" type="number">
+  200 for success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  "success" on success
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data properties">
+    <ResponseField name="taskId" type="string">
+      Unique task identifier for polling status
+    </ResponseField>
+
+    <ResponseField name="orderId" type="string">
+      Order identifier
+    </ResponseField>
+
+    <ResponseField name="creditsUsed" type="number">
+      Credits deducted (15, 20, or 28 based on duration)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch('https://z-image.vip/api/v1/jobs/createTask', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'wan22-video-generation',
+    inputs: {
+      imageUrl: 'https://cdn.example.com/portrait.jpg',
+      prompt: 'Slow camera zoom in, subject looking around naturally',
+      duration: '5s',
+      resolution: '1280x720'
+    }
+  })
+});
+
+const data = await response.json();
+console.log(data.data.taskId);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://z-image.vip/api/v1/jobs/createTask',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'model': 'wan22-video-generation',
+        'inputs': {
+            'imageUrl': 'https://cdn.example.com/portrait.jpg',
+            'prompt': 'Slow camera zoom in, subject looking around naturally',
+            'duration': '5s',
+            'resolution': '1280x720'
+        }
+    }
+)
+
+data = response.json()
+print(data['data']['taskId'])
+```
+
+```bash cURL
+curl -X POST https://z-image.vip/api/v1/jobs/createTask \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan22-video-generation",
+    "inputs": {
+      "imageUrl": "https://cdn.example.com/portrait.jpg",
+      "prompt": "Slow camera zoom in, subject looking around naturally",
+      "duration": "5s",
+      "resolution": "1280x720"
+    }
+  }'
+```
+
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "creditsUsed": 15
+  }
+}
+```
+
+## Next Steps
+
+After creating a task, poll for completion:
+
+<Card title="Get Task Status" icon="circle-check" href="../common/reference/get-task-status">
+  Check task progress and retrieve result URLs
+</Card>

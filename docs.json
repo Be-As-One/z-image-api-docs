@@ -1,0 +1,104 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Z-Image API",
+  "colors": {
+    "primary": "#FF9A56",
+    "light": "#FFB380",
+    "dark": "#E67E3C"
+  },
+  "modeToggle": {
+    "default": "dark"
+  },
+  "favicon": "/favicon.png",
+  "logo": {
+    "light": "/logo/logo.webp",
+    "dark": "/logo/logo.webp"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://z-image.vip/admin"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://z-image.vip"
+    }
+  },
+  "navigation": {
+    "home": {
+      "href": "https://z-image.vip"
+    },
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "icon": "rocket",
+        "pages": [
+          "getting-started/quickstart",
+          "getting-started/pricing"
+        ]
+      },
+      {
+        "tab": "Z-Image API",
+        "icon": "image",
+        "pages": [
+          "z-image/image-generation"
+        ]
+      },
+      {
+        "tab": "Seedream API",
+        "icon": "sparkles",
+        "pages": [
+          "seedream/image-generation"
+        ]
+      },
+      {
+        "tab": "Z Video API",
+        "icon": "video",
+        "pages": [
+          "z-video/video-generation"
+        ]
+      },
+      {
+        "tab": "Common",
+        "icon": "book",
+        "groups": [
+          {
+            "group": "Authentication & Errors",
+            "pages": [
+              "common/authentication",
+              "common/error-handling"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "common/reference/api-overview",
+              "common/reference/create-task",
+              "common/reference/get-task-status",
+              "common/reference/webhooks"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "icon": "circle-info",
+        "pages": [
+          "resources/logs",
+          "resources/support",
+          "resources/limitations"
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/Be-As-One/z-image",
+      "discord": "https://discord.gg/b7eg4UcA4j"
+    }
+  }
+}

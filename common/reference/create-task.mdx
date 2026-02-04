@@ -1,0 +1,230 @@
+---
+title: Create Task
+description: 'Submit a new image or video generation task'
+api: 'POST https://z-image.vip/api/v1/jobs/createTask'
+---
+
+## Request
+
+### Headers
+
+| Header | Value | Required |
+|--------|-------|----------|
+| Authorization | Bearer YOUR_API_KEY | Yes |
+| Content-Type | application/json | Yes |
+
+### Body Parameters
+
+<ParamField body="model" type="string" required>
+  The model/tool ID to use for generation. See [supported models list](#supported-models).
+</ParamField>
+
+<ParamField body="inputs" type="object" required>
+  Model-specific input parameters. Structure varies by model.
+
+  Common parameters:
+  - `prompt` (string) - Generation prompt
+  - `imageUrl` (string) - Input image URL (for image-to-X models)
+  - `aspectRatio` (string) - Output aspect ratio
+  - `resolution` (string) - Output resolution
+</ParamField>
+
+<ParamField body="callBackUrl" type="string">
+  Optional webhook URL to receive completion notifications
+</ParamField>
+
+### Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://z-image.vip/api/v1/jobs/createTask" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedream-text-to-image",
+    "callBackUrl": "https://yourapp.com/webhook",
+    "inputs": {
+      "prompt": "A majestic mountain landscape at sunset",
+      "aspectRatio": "16:9",
+      "resolution": "2k"
+    }
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://z-image.vip/api/v1/jobs/createTask', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'seedream-text-to-image',
+    callBackUrl: 'https://yourapp.com/webhook',
+    inputs: {
+      prompt: 'A majestic mountain landscape at sunset',
+      aspectRatio: '16:9',
+      resolution: '2k'
+    }
+  })
+});
+
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://z-image.vip/api/v1/jobs/createTask',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'model': 'seedream-text-to-image',
+        'callBackUrl': 'https://yourapp.com/webhook',
+        'inputs': {
+            'prompt': 'A majestic mountain landscape at sunset',
+            'aspectRatio': '16:9',
+            'resolution': '2k'
+        }
+    }
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## Response
+
+### Success Response
+
+<ResponseField name="code" type="number">
+  Status code (200 for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Status message ("success" on success)
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Response data object
+
+  <Expandable title="data properties">
+    <ResponseField name="taskId" type="string">
+      Unique task identifier for tracking
+    </ResponseField>
+
+    <ResponseField name="orderId" type="string">
+      Associated order identifier
+    </ResponseField>
+
+    <ResponseField name="creditsUsed" type="number">
+      Number of credits deducted for this task
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "creditsUsed": 5
+  }
+}
+```
+
+## Error Responses
+
+<ResponseExample>
+```json 400 - Invalid Parameters
+{
+  "code": 400,
+  "message": "Invalid request parameters",
+  "data": null
+}
+```
+
+```json 400 - Invalid Model Inputs
+{
+  "code": 400,
+  "message": "Invalid inputs for model",
+  "data": null
+}
+```
+
+```json 401 - Missing Auth
+{
+  "code": 401,
+  "message": "Missing Authorization header",
+  "data": null
+}
+```
+
+```json 401 - Invalid API Key
+{
+  "code": 401,
+  "message": "Invalid API Key",
+  "data": null
+}
+```
+
+```json 402 - Insufficient Credits
+{
+  "code": 402,
+  "message": "Insufficient credits",
+  "data": null
+}
+```
+</ResponseExample>
+
+## Supported Models
+
+### Text to Image
+
+<Accordion title="seedream-text-to-image" icon="image">
+  High-quality AI image generation
+
+  **Parameters:**
+  - `prompt` (required) - Describe what you want to generate
+  - `aspectRatio` - Output ratio: `16:9`, `1:1`, `9:16`
+  - `resolution` - Quality: `2k`, `4k`
+  - `seed` - Optional number for reproducible results
+
+  **Credit cost:** 5 credits
+</Accordion>
+
+### Image to Video
+
+<Accordion title="wan22-video-generation" icon="video">
+  Turn static images into dynamic videos
+
+  **Parameters:**
+  - `imageUrl` (required) - Your input image URL
+  - `prompt` - Describe the desired motion
+  - `duration` - Video length: `5s`, `8s`, `12s`
+  - `resolution` - Output size: `1280x720` (landscape), `720x1280` (portrait)
+
+  **Credit cost:** 15-28 credits (varies by duration)
+</Accordion>
+
+## Next Steps
+
+After creating a task:
+
+1. Save the `taskId` from the response
+2. Use [Get Task Status](get-task-status) to check progress
+3. Poll every 2-5 seconds until completion
+4. Retrieve results from the `resultJson` field
+
+<Card title="Get Task Status" icon="circle-check" href="get-task-status">
+  Learn how to check task progress and retrieve results
+</Card>

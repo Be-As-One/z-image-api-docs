@@ -1,0 +1,152 @@
+---
+title: API Overview
+description: 'High-level overview of the Z-Image API'
+---
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://z-image.vip/api/v1
+```
+
+## Authentication
+
+All endpoints require authentication using Bearer token in the Authorization header:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+See 👉 [Authentication](../authentication) for details.
+
+## Endpoints
+
+The Z-Image API consists of two main endpoints:
+
+<CardGroup cols={2}>
+  <Card title="Create Task" icon="plus" href="create-task">
+    Submit a new image or video generation task
+  </Card>
+  <Card title="Get Task Status" icon="circle-check" href="get-task-status">
+    Check the status and retrieve results
+  </Card>
+</CardGroup>
+
+## Request Flow
+
+<Steps>
+  <Step title="Create Task">
+    Submit a generation request with model and parameters
+  </Step>
+  <Step title="Receive Task ID">
+    Get a unique task ID to track progress
+  </Step>
+  <Step title="Poll Status">
+    Check task status every 2-5 seconds
+  </Step>
+  <Step title="Retrieve Result">
+    Download generated content when status is "success"
+  </Step>
+</Steps>
+
+## Response Format
+
+All API responses follow this structure:
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    // Response data varies by endpoint
+  }
+}
+```
+
+### Success Response
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": { /* ... */ }
+}
+```
+
+### Error Response
+
+```json
+{
+  "code": 400,
+  "message": "Invalid request parameters",
+  "data": null
+}
+```
+
+## Error Codes
+
+| Code | Meaning | Common Causes |
+|------|---------|---------------|
+| 200 | Success | Request completed successfully |
+| 400 | Bad Request | Invalid parameters or missing required fields |
+| 401 | Unauthorized | Invalid or missing API key |
+| 402 | Payment Required | Insufficient credits |
+| 404 | Not Found | Task or resource doesn't exist |
+| 500 | Server Error | Internal server error |
+
+## Rate Limits
+
+By default, we apply the following limits:
+- Up to 100 new generation requests per minute
+- Up to 1,000 requests per hour
+- Limits are applied per API key
+
+<Note>
+For most users, this is more than sufficient. If you consistently hit rate limits, contact 👉 [support](../../resources/support) to request a higher limit.
+</Note>
+
+## Webhooks
+
+You can optionally provide a `callBackUrl` when creating tasks to receive notifications when tasks complete.
+
+See 👉 [Webhooks](webhooks) for details.
+
+## Supported Models
+
+Z-Image API currently supports two core models:
+
+### Text to Image
+- **seedream-text-to-image** - High-quality text to image generation with up to 4K resolution
+
+### Image to Video
+- **wan22-video-generation** - Animate your images with Wan 2.2 model (5-12 second videos)
+
+See 👉 [Create Task](create-task) for detailed parameter documentation.
+
+## Credits System
+
+All operations consume credits based on:
+- Model complexity
+- Resolution/quality settings
+- Processing time
+
+The `creditsUsed` field in the create task response shows how many credits were deducted.
+
+<Tip>
+  Check your credit balance in the 👉 [dashboard](https://z-image.vip/admin) before submitting large batches. See 👉 [Pricing](../../getting-started/pricing) for detailed costs.
+</Tip>
+
+## Versioning
+
+The current API version is **v1**. All endpoints are prefixed with `/api/v1/`.
+
+Future versions will be released with different prefixes (e.g., `/api/v2/`) to maintain backward compatibility.
+
+## Support
+
+For API support:
+- Check the 👉 [Error Handling Guide](../error-handling)
+- Review example code in language-specific guides
+- Get help on 👉 [Discord](https://discord.gg/b7eg4UcA4j) (fastest response)

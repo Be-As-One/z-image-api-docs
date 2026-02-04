@@ -1,0 +1,429 @@
+---
+title: Webhooks
+description: 'Receive automatic notifications when tasks complete'
+---
+
+## Overview
+
+Webhooks allow you to receive automatic HTTP POST notifications when your tasks complete, eliminating the need for continuous polling.
+
+<Info>
+  Webhooks are optional. You can always use [polling](get-task-status) to check task status.
+</Info>
+
+## How Webhooks Work
+
+<Steps>
+  <Step title="Provide callback URL">
+    Include `callBackUrl` when creating a task
+  </Step>
+
+  <Step title="Task processes">
+    Your task is processed normally
+  </Step>
+
+  <Step title="Webhook triggered">
+    When the task completes (success or failure), we send a POST request to your URL
+  </Step>
+
+  <Step title="Process notification">
+    Your server receives and processes the notification
+  </Step>
+</Steps>
+
+## Setting Up a Webhook
+
+Include the `callBackUrl` parameter when creating a task:
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch('https://z-image.vip/api/v1/jobs/createTask', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'seedream-text-to-image',
+    callBackUrl: 'https://yourapp.com/api/webhook/z-image',
+    inputs: {
+      prompt: 'A beautiful landscape'
+    }
+  })
+});
+```
+
+```python Python
+response = requests.post(
+    'https://z-image.vip/api/v1/jobs/createTask',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'model': 'seedream-text-to-image',
+        'callBackUrl': 'https://yourapp.com/api/webhook/z-image',
+        'inputs': {
+            'prompt': 'A beautiful landscape'
+        }
+    }
+)
+```
+
+</CodeGroup>
+
+## Webhook Payload
+
+The webhook payload is identical to the [Get Task Status](get-task-status) response:
+
+### Success Notification
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "model": "seedream-text-to-image",
+    "state": "success",
+    "creditsUsed": 5,
+    "param": "{\"prompt\":\"A beautiful landscape\"}",
+    "resultJson": "{\"resultUrls\":[\"https://cdn.z-image.vip/result.png\"]}",
+    "createTime": 1735599634000,
+    "updateTime": 1735599654000,
+    "completeTime": 1735599654000
+  }
+}
+```
+
+### Failure Notification
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "model": "seedream-text-to-image",
+    "state": "fail",
+    "creditsUsed": 5,
+    "param": "{\"prompt\":\"...\"}",
+    "resultJson": "",
+    "failMsg": "Invalid prompt content",
+    "createTime": 1735599634000,
+    "updateTime": 1735599644000
+  }
+}
+```
+
+## Implementing a Webhook Endpoint
+
+### Express.js (Node.js)
+
+```javascript
+import express from 'express';
+
+const app = express();
+app.use(express.json());
+
+app.post('/api/webhook/z-image', async (req, res) => {
+  try {
+    const { data } = req.body;
+
+    // Verify the webhook is from Z-Image (optional but recommended)
+    // You could check the taskId against your database
+
+    if (data.state === 'success') {
+      // Parse result URLs
+      const result = JSON.parse(data.resultJson);
+      console.log('Task completed:', data.taskId);
+      console.log('Result URLs:', result.resultUrls);
+
+      // Process the results (save to database, notify user, etc.)
+      await processResults(data.taskId, result.resultUrls);
+
+    } else if (data.state === 'fail') {
+      console.error('Task failed:', data.taskId, data.failMsg);
+      await handleFailure(data.taskId, data.failMsg);
+    }
+
+    // Always respond with 200 to acknowledge receipt
+    res.status(200).json({ received: true });
+
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.listen(3000);
+```
+
+### Flask (Python)
+
+```python
+from flask import Flask, request, jsonify
+import json
+
+app = Flask(__name__)
+
+@app.route('/api/webhook/z-image', methods=['POST'])
+def webhook():
+    try:
+        payload = request.json
+        data = payload['data']
+
+        if data['state'] == 'success':
+            # Parse result URLs
+            result = json.loads(data['resultJson'])
+            print(f"Task completed: {data['taskId']}")
+            print(f"Result URLs: {result['resultUrls']}")
+
+            # Process the results
+            process_results(data['taskId'], result['resultUrls'])
+
+        elif data['state'] == 'fail':
+            print(f"Task failed: {data['taskId']} - {data['failMsg']}")
+            handle_failure(data['taskId'], data['failMsg'])
+
+        # Always respond with 200
+        return jsonify({'received': True}), 200
+
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+### Next.js API Route
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  try {
+    const payload = await request.json();
+    const { data } = payload;
+
+    if (data.state === 'success') {
+      const result = JSON.parse(data.resultJson);
+      console.log('Task completed:', data.taskId);
+      console.log('Result URLs:', result.resultUrls);
+
+      await processResults(data.taskId, result.resultUrls);
+
+    } else if (data.state === 'fail') {
+      console.error('Task failed:', data.taskId, data.failMsg);
+      await handleFailure(data.taskId, data.failMsg);
+    }
+
+    return NextResponse.json({ received: true });
+
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always respond with 200 OK" icon="circle-check">
+    Respond quickly with HTTP 200 to acknowledge receipt. Process the webhook asynchronously if needed.
+
+    ```javascript
+    // Good: Respond immediately
+    res.status(200).json({ received: true });
+
+    // Then process asynchronously
+    processWebhookAsync(data);
+    ```
+  </Accordion>
+
+  <Accordion title="Implement idempotency" icon="shield">
+    The same webhook may be delivered multiple times. Use the `taskId` to ensure idempotent processing.
+
+    ```javascript
+    async function processWebhook(taskId, data) {
+      // Check if already processed
+      const existing = await db.getProcessedTask(taskId);
+      if (existing) {
+        console.log('Webhook already processed:', taskId);
+        return;
+      }
+
+      // Process and mark as done
+      await processResults(data);
+      await db.markTaskProcessed(taskId);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Verify webhook authenticity" icon="lock">
+    **Important**: Z-Image webhooks currently do not include cryptographic signatures. Implement these security layers:
+
+    ```javascript
+    async function verifyWebhook(req) {
+      const { data } = req.body;
+
+      // Layer 1: Verify taskId exists in your database
+      const task = await db.findTask(data.taskId);
+      if (!task) {
+        throw new Error('Unknown task ID');
+      }
+
+      // Layer 2: Verify task belongs to your account
+      if (task.apiKeyId !== yourApiKeyId) {
+        throw new Error('Task from different account');
+      }
+
+      // Layer 3: Check timing (reject very old webhooks)
+      const taskAge = Date.now() - task.createTime;
+      if (taskAge > 3600000) { // 1 hour
+        throw new Error('Task too old');
+      }
+
+      // Layer 4: IP whitelist (optional, check req.ip)
+      const allowedIPs = ['52.1.2.3', '52.4.5.6']; // Z-Image IPs
+      if (process.env.NODE_ENV === 'production' && !allowedIPs.includes(req.ip)) {
+        console.warn('Webhook from unexpected IP:', req.ip);
+      }
+
+      return task;
+    }
+    ```
+
+    <Warning>
+      Without cryptographic signatures, anyone who knows a task ID could theoretically send fake webhooks. The multi-layer verification above significantly reduces this risk.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Handle webhook failures gracefully" icon="triangle-exclamation">
+    If your webhook endpoint is down, we'll retry delivery. Implement fallback polling for critical tasks.
+
+    ```javascript
+    // Create task with webhook
+    const { taskId } = await createTask({ callBackUrl: webhookUrl });
+
+    // Also poll as fallback
+    setTimeout(() => pollIfNotReceived(taskId), 60000);
+    ```
+  </Accordion>
+
+  <Accordion title="Use HTTPS" icon="shield-halved">
+    Always use HTTPS URLs for webhook endpoints to ensure secure transmission.
+
+    ```javascript
+    // Good
+    callBackUrl: 'https://yourapp.com/webhook'
+
+    // Bad (insecure)
+    callBackUrl: 'http://yourapp.com/webhook'
+    ```
+  </Accordion>
+
+  <Accordion title="Process asynchronously" icon="clock">
+    Don't perform heavy operations in the webhook handler. Queue the work and process it separately.
+
+    ```javascript
+    app.post('/webhook', async (req, res) => {
+      // Acknowledge immediately
+      res.status(200).json({ received: true });
+
+      // Queue for processing
+      await queue.add('process-result', req.body);
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Webhook Retry Policy
+
+If your webhook endpoint fails to respond with 2xx status:
+
+- We'll retry up to **3 times**
+- With **exponential backoff** (1s, 5s, 15s)
+- After 3 failures, we stop retrying
+
+<Warning>
+  Implement fallback polling for critical tasks to ensure you don't miss results if webhooks fail.
+</Warning>
+
+## Testing Webhooks Locally
+
+Use tools like ngrok to expose your local server for webhook testing:
+
+<Steps>
+  <Step title="Install ngrok">
+    ```bash
+    npm install -g ngrok
+    # or
+    brew install ngrok
+    ```
+  </Step>
+
+  <Step title="Start your local server">
+    ```bash
+    node server.js  # Your webhook server on port 3000
+    ```
+  </Step>
+
+  <Step title="Expose with ngrok">
+    ```bash
+    ngrok http 3000
+    ```
+
+    You'll get a public URL like: `https://abc123.ngrok.io`
+  </Step>
+
+  <Step title="Use ngrok URL">
+    ```javascript
+    callBackUrl: 'https://abc123.ngrok.io/api/webhook/z-image'
+    ```
+  </Step>
+</Steps>
+
+## Debugging Webhooks
+
+<Tip>
+  Log all webhook requests to help debug issues:
+
+  ```javascript
+  app.post('/webhook', (req, res) => {
+    console.log('Webhook received:', JSON.stringify(req.body, null, 2));
+    // ... handle webhook
+  });
+  ```
+</Tip>
+
+Common issues:
+
+| Issue | Solution |
+|-------|----------|
+| Webhook not received | Check firewall rules and ensure public accessibility |
+| Receiving multiple times | Implement idempotency using taskId |
+| Webhook timing out | Respond with 200 immediately, process async |
+| SSL/TLS errors | Ensure valid HTTPS certificate |
+
+## Webhooks vs Polling
+
+| Feature | Webhooks | Polling |
+|---------|----------|---------|
+| Latency | Instant notification | 2-5 second delay |
+| Server load | Lower (push) | Higher (pull) |
+| Reliability | Depends on your server | More reliable |
+| Complexity | Requires public endpoint | Simpler to implement |
+| Best for | Production systems | Testing, simple apps |
+
+<Note>
+  For production systems, we recommend implementing **both** webhooks and fallback polling for maximum reliability.
+</Note>

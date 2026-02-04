@@ -1,0 +1,118 @@
+---
+title: Debugging with Logs
+description: 'How to view and debug task logs'
+---
+
+## Overview
+
+Every task generates logs you can view in the dashboard. Logs help debug failures and understand generation behavior.
+
+## Viewing Logs
+
+**Via Dashboard:**
+1. Go to 👉 [z-image.vip/admin](https://z-image.vip/admin)
+2. Navigate to **Orders** tab
+3. Find your task by `taskId` or `orderId`
+4. Click **View Details** to see logs
+
+**What You'll See:**
+- Task creation timestamp
+- Model and parameters used
+- Processing stages (queued → running → completed/failed)
+- Error messages if failed
+- Result URLs if successful
+
+## Common Log Patterns
+
+### Successful Generation
+
+```
+[2025-02-04 10:23:15] Task created: task_cl123456
+[2025-02-04 10:23:16] Queued for processing
+[2025-02-04 10:23:18] Model: seedream-text-to-image
+[2025-02-04 10:23:18] Started generation
+[2025-02-04 10:23:42] Generation complete
+[2025-02-04 10:23:43] Result: https://cdn.z-image.vip/...
+```
+
+### Failed Generation
+
+```
+[2025-02-04 10:25:10] Task created: task_cl789012
+[2025-02-04 10:25:11] Queued for processing
+[2025-02-04 10:25:13] Model: seedream-text-to-image
+[2025-02-04 10:25:13] Started generation
+[2025-02-04 10:25:45] ERROR: Content policy violation detected
+[2025-02-04 10:25:45] Task failed - credits refunded
+```
+
+## Debugging Failures
+
+**Step 1: Check Error Message**
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Content policy violation` | NSFW content detected | Use different prompt |
+| `Invalid aspect ratio` | Unsupported ratio | Use 16:9, 1:1, 9:16, etc. |
+| `Insufficient credits` | Account balance low | Add credits |
+| `Model timeout` | Generation took >5 min | Retry or contact support |
+
+**Step 2: Verify Parameters**
+
+Compare your request against 👉 [Create Task](../common/reference/create-task) documentation. Common mistakes:
+- Typo in model name (`seedream-text-to-image` not `seedream`)
+- Invalid resolution (`2k` not `2K` or `2048`)
+- Missing required fields (`prompt`)
+
+**Step 3: Check API Response**
+
+The API returns detailed errors:
+
+```json
+{
+  "code": 400,
+  "message": "Invalid aspect ratio: 16:10 not supported"
+}
+```
+
+**Step 4: Test with Minimal Example**
+
+Simplify your request to bare minimum:
+
+```javascript
+{
+  model: 'seedream-text-to-image',
+  inputs: {
+    prompt: 'A red apple',
+    aspectRatio: '1:1',
+    resolution: '2k'
+  }
+}
+```
+
+If this works, add parameters one by one to isolate the issue.
+
+## Log Retention
+
+We keep logs for **30 days**. Download important logs before they expire.
+
+## Support Integration
+
+When contacting 👉 [support](support), include:
+- Task ID
+- Full error message from logs
+- Your request parameters
+- Expected vs actual behavior
+
+This helps us debug faster.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Error Handling" icon="triangle-exclamation" href="../common/error-handling">
+    Handle errors gracefully in code
+  </Card>
+  <Card title="Support" icon="headset" href="support">
+    Still stuck? Contact support
+  </Card>
+</CardGroup>

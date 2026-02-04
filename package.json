@@ -1,0 +1,16 @@
+{
+  "name": "z-image-api-docs",
+  "version": "1.0.0",
+  "description": "Z-Image API Documentation",
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "mintlify build",
+    "preview": "mintlify dev",
+    "check:links": "! grep -r '](/' --include='*.mdx' . | grep -v 'https://' && echo '✅ No absolute Markdown links' || (echo '❌ ERROR: Found absolute Markdown links' && exit 1)",
+    "check:href": "! grep -r 'href=\"/' --include='*.mdx' . && echo '✅ No absolute JSX href' || (echo '❌ ERROR: Found absolute JSX href (use relative paths)' && exit 1)",
+    "check:all": "npm run check:links && npm run check:href"
+  },
+  "keywords": ["api", "documentation", "z-image"],
+  "author": "Z-Image Team",
+  "license": "MIT"
+}

@@ -1,0 +1,327 @@
+---
+title: Get Task Status
+description: 'Check task progress and retrieve results'
+api: 'GET https://z-image.vip/api/v1/jobs/recordInfo'
+---
+
+## Request
+
+### Headers
+
+| Header | Value | Required |
+|--------|-------|----------|
+| Authorization | Bearer YOUR_API_KEY | Yes |
+
+### Query Parameters
+
+<ParamField query="taskId" type="string" required>
+  The task ID returned from the 👉 [Create Task](create-task) endpoint
+</ParamField>
+
+### Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://z-image.vip/api/v1/jobs/recordInfo?taskId=task_clxxxxxx" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const taskId = 'task_clxxxxxx';
+const response = await fetch(
+  `https://z-image.vip/api/v1/jobs/recordInfo?taskId=${taskId}`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    }
+  }
+);
+
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+task_id = 'task_clxxxxxx'
+response = requests.get(
+    f'https://z-image.vip/api/v1/jobs/recordInfo?taskId={task_id}',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY'
+    }
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## Response
+
+### Success Response
+
+<ResponseField name="code" type="number">
+  Status code (200 for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Status message ("success" on success)
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Task information object
+
+  <Expandable title="data properties">
+    <ResponseField name="taskId" type="string">
+      Unique task identifier
+    </ResponseField>
+
+    <ResponseField name="orderId" type="string">
+      Associated order identifier
+    </ResponseField>
+
+    <ResponseField name="model" type="string">
+      Model used for generation
+    </ResponseField>
+
+    <ResponseField name="state" type="string">
+      Current task state: `waiting`, `generating`, `success`, or `fail`
+    </ResponseField>
+
+    <ResponseField name="creditsUsed" type="number">
+      Credits consumed for this task
+    </ResponseField>
+
+    <ResponseField name="param" type="string">
+      JSON string of input parameters used
+    </ResponseField>
+
+    <ResponseField name="resultJson" type="string">
+      JSON string containing result URLs (only when state is `success`)
+    </ResponseField>
+
+    <ResponseField name="failMsg" type="string">
+      Error message (only when state is `fail`)
+    </ResponseField>
+
+    <ResponseField name="createTime" type="number">
+      Task creation timestamp (milliseconds)
+    </ResponseField>
+
+    <ResponseField name="updateTime" type="number">
+      Last update timestamp (milliseconds)
+    </ResponseField>
+
+    <ResponseField name="completeTime" type="number">
+      Task completion timestamp (only when completed)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Task States
+
+<AccordionGroup>
+  <Accordion title="waiting" icon="clock">
+    Task has been submitted and is queued for processing
+
+    **Action:** Continue polling
+  </Accordion>
+
+  <Accordion title="generating" icon="wand-magic-sparkles">
+    Task is currently being processed
+
+    **Action:** Continue polling every 2-5 seconds
+  </Accordion>
+
+  <Accordion title="success" icon="circle-check">
+    Task completed successfully
+
+    **Action:** Parse `resultJson` to get result URLs
+  </Accordion>
+
+  <Accordion title="fail" icon="circle-xmark">
+    Task failed to complete
+
+    **Action:** Check `failMsg` for error details
+  </Accordion>
+</AccordionGroup>
+
+## Example Responses
+
+### In Progress
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "model": "seedream-text-to-image",
+    "state": "generating",
+    "creditsUsed": 5,
+    "param": "{\"prompt\":\"A beautiful sunset\",\"resolution\":\"2k\"}",
+    "resultJson": "",
+    "createTime": 1735599634000,
+    "updateTime": 1735599644000
+  }
+}
+```
+
+### Completed Successfully
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "model": "seedream-text-to-image",
+    "state": "success",
+    "creditsUsed": 5,
+    "param": "{\"prompt\":\"A beautiful sunset\",\"resolution\":\"2k\"}",
+    "resultJson": "{\"resultUrls\":[\"https://cdn.z-image.vip/generated/image1.png\"]}",
+    "createTime": 1735599634000,
+    "updateTime": 1735599654000,
+    "completeTime": 1735599654000
+  }
+}
+```
+
+### Failed
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_clxxxxxx",
+    "orderId": "ord_clxxxxxx",
+    "model": "seedream-text-to-image",
+    "state": "fail",
+    "creditsUsed": 5,
+    "param": "{\"prompt\":\"...\"}",
+    "resultJson": "",
+    "failMsg": "Invalid prompt content",
+    "createTime": 1735599634000,
+    "updateTime": 1735599644000
+  }
+}
+```
+
+## Polling Best Practices
+
+<Steps>
+  <Step title="Wait before first poll">
+    Wait 2-3 seconds after task creation before first status check
+  </Step>
+
+  <Step title="Poll at regular intervals">
+    Check status every 2-5 seconds (don't poll too frequently)
+  </Step>
+
+  <Step title="Implement timeout">
+    Set a maximum wait time (e.g., 5 minutes for images, 10 minutes for videos)
+  </Step>
+
+  <Step title="Handle all states">
+    Implement proper handling for all possible states
+  </Step>
+</Steps>
+
+## Polling Example
+
+<CodeGroup>
+
+```javascript Node.js
+async function waitForCompletion(taskId, timeout = 300000) {
+  const startTime = Date.now();
+  const pollInterval = 3000; // 3 seconds
+
+  while (Date.now() - startTime < timeout) {
+    const response = await fetch(
+      `https://z-image.vip/api/v1/jobs/recordInfo?taskId=${taskId}`,
+      {
+        headers: { 'Authorization': `Bearer ${process.env.Z_IMAGE_API_KEY}` }
+      }
+    );
+
+    const { data } = await response.json();
+
+    switch (data.state) {
+      case 'success':
+        const result = JSON.parse(data.resultJson);
+        return { success: true, urls: result.resultUrls };
+
+      case 'fail':
+        return { success: false, error: data.failMsg };
+
+      case 'waiting':
+      case 'generating':
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        break;
+
+      default:
+        throw new Error(`Unknown state: ${data.state}`);
+    }
+  }
+
+  throw new Error('Task timeout');
+}
+```
+
+```python Python
+import time
+import json
+
+def wait_for_completion(task_id, timeout=300):
+    start_time = time.time()
+    poll_interval = 3  # seconds
+
+    while time.time() - start_time < timeout:
+        response = requests.get(
+            f'https://z-image.vip/api/v1/jobs/recordInfo?taskId={task_id}',
+            headers={'Authorization': f'Bearer {os.getenv("Z_IMAGE_API_KEY")}'}
+        )
+
+        data = response.json()['data']
+
+        if data['state'] == 'success':
+            result = json.loads(data['resultJson'])
+            return {'success': True, 'urls': result['resultUrls']}
+
+        elif data['state'] == 'fail':
+            return {'success': False, 'error': data['failMsg']}
+
+        elif data['state'] in ['waiting', 'generating']:
+            time.sleep(poll_interval)
+
+        else:
+            raise Exception(f"Unknown state: {data['state']}")
+
+    raise Exception('Task timeout')
+```
+
+</CodeGroup>
+
+## Error Responses
+
+| Code | Message | Cause |
+|------|---------|-------|
+| 400 | Invalid taskId | Task ID format is incorrect |
+| 401 | Missing Authorization header | API key not provided |
+| 401 | Invalid API Key | API key is invalid or expired |
+| 404 | Task not found | Task doesn't exist or belongs to another user |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Webhooks" icon="webhook" href="webhooks">
+    Set up webhooks for automatic notifications
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="../common/error-handling">
+    Handle errors gracefully in your code
+  </Card>
+</CardGroup>
