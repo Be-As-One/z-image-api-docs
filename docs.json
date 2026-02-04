@@ -5,10 +5,15 @@
   "colors": {
     "primary": "#FF9A56",
     "light": "#FFB380",
-    "dark": "#E67E3C"
+    "dark": "#E67E3C",
+    "background": {
+      "light": "#FFFFFF",
+      "dark": "#0D0D0D"
+    }
   },
   "modeToggle": {
-    "default": "dark"
+    "default": "dark",
+    "isHidden": false
   },
   "favicon": "/favicon.png",
   "logo": {
